@@ -27,7 +27,7 @@ import os
 import logging
 import unittest
 from decimal import Decimal
-from service.models import Product, Category, db
+from service.models import Product, Category, db, DataValidationError
 from service import app
 from tests.factories import ProductFactory
 
@@ -137,10 +137,9 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].id, existing_id)
         self.assertEqual(products[0].description, "trial_version")
+        # test the data validation error when product update without id
         product.id = None
-        with self.assertRaises(Exception) as context:
-            product.update()
-        self.assertTrue("Update called with empty ID field", str(context.exception))
+        self.assertRaises(DataValidationError, product.update)
 
     def test_delete_a_product(self):
         """Verify if the deletion is working"""
@@ -220,3 +219,10 @@ class TestProductModel(unittest.TestCase):
         found = Product.find_by_price(pricestr)
         for product in found:
             self.assertEqual(str(product.price), pricestr)
+
+    def test_from_dictionary(self):
+        """Test if the Product is deserialized correctly"""
+        product = ProductFactory()
+        product.create()
+        product.available = "Not True"
+        self.assertRaises(DataValidationError, product.deserialize, product)
