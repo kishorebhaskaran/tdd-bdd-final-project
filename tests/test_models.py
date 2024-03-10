@@ -104,3 +104,119 @@ class TestProductModel(unittest.TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+
+    def test_read_a_product(self):
+        """Verify if read works correctly"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        # Fetching product back
+        found_product = Product.find(product.id)
+        self.assertEqual(found_product.id, product.id)
+        self.assertEqual(found_product.name, product.name)
+        self.assertEqual(found_product.description, product.description)
+        self.assertEqual(found_product.price, product.price)
+        self.assertEqual(found_product.available, product.available)
+        self.assertEqual(found_product.category, product.category)
+
+    def test_update_a_product(self):
+        """Verify if update works correctly"""
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        product.description = "trial_version"
+        # changing the product description
+        existing_id = product.id
+        product.update()
+        self.assertEqual(product.id, existing_id)
+        self.assertEqual(product.description, "trial_version")
+        # fetch the products from db
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].id, existing_id)
+        self.assertEqual(products[0].description, "trial_version")
+        product.id = None
+        with self.assertRaises(Exception) as context:
+            product.update()
+        self.assertTrue("Update called with empty ID field", str(context.exception))
+
+    def test_delete_a_product(self):
+        """Verify if the deletion is working"""
+        product = ProductFactory()
+        product.create()
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        # removing the product
+        product.delete()
+        products = Product.all()
+        self.assertEqual(len(products), 0)
+
+    def test_list_all_products(self):
+        """Verify if list all works"""
+        products = Product.all()
+        self.assertEqual(len(products), 0)
+        # Create products
+        for _ in range(5):
+            product = ProductFactory()
+            product.create()
+        # Checking to see if there are 5 products
+        products = Product.all()
+        self.assertEqual(len(products), 5)
+
+    def test_find_product_by_name(self):
+        """Verify if find by name works"""
+        # Create products
+        products = ProductFactory.create_batch(5)
+        for product in products:
+            product.create()
+        name = products[0].name
+        count = len([product for product in products if product.name == name])
+        found = Product.find_by_name(name)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.name, name)
+
+    def test_find_product_by_availability(self):
+        """Verify if find by availability works"""
+        # Create Products
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        available = products[0].available
+        count = len([product for product in products if product.available == available])
+        found = Product.find_by_availability(available)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.available, available)
+
+    def test_find_product_by_category(self):
+        """Verify if find by category works"""
+        # Create Products
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        category = products[0].category
+        count = len([product for product in products if product.category == category])
+        found = Product.find_by_category(category)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.category, category)
+
+    def test_find_product_by_price(self):
+        """Verify if find by price works"""
+        # Create Products
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        price = products[0].price
+        count = len([product for product in products if product.price == price])
+        found = Product.find_by_price(price)
+        self.assertEqual(found.count(), count)
+        for product in found:
+            self.assertEqual(product.price, price)
+        pricestr = str(price)
+        found = Product.find_by_price(pricestr)
+        for product in found:
+            self.assertEqual(str(product.price), pricestr)
